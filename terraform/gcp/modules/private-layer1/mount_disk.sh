@@ -28,6 +28,25 @@ if ! blkid "$DISK_PATH" &>/dev/null; then
   mkfs.$FILESYSTEM "$DISK_PATH"
 else
   echo "[INFO] Filesystem already exists on $DISK_PATH"
+  # Resize ext4 filesystem to use full disk capacity (for snapshot-based disks)
+  if command -v resize2fs >/dev/null 2>&1; then
+    echo "[INFO] Checking filesystem before resize..."
+    set +e  # Temporarily disable exit on error for e2fsck
+    e2fsck -f -y "$DISK_PATH"
+    e2fsck_exit_code=$?
+    set -e  # Re-enable exit on error
+    # e2fsck exit codes: 0=no errors, 1=errors fixed, 2=errors fixed (reboot needed)
+    if [ $e2fsck_exit_code -le 2 ]; then
+      echo "[INFO] Filesystem check completed successfully"
+      echo "[INFO] Resizing ext4 filesystem to use full disk capacity..."
+      resize2fs "$DISK_PATH"
+      echo "[INFO] Filesystem resized successfully"
+    else
+      echo "[WARNING] Filesystem check failed (exit code: $e2fsck_exit_code). Skipping resize."
+    fi
+  else
+    echo "[WARNING] resize2fs not found. You may need to manually resize the filesystem."
+  fi
 fi
 
 # Create and mount
