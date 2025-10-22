@@ -39,7 +39,7 @@
   file:
     state: directory
     path: "{{ item }}"
-  with_items:
+  loop:
   - "{{ kaia_conf.DATA_DIR }}"
   - "{{ kaia_conf.LOG_DIR }}"
 

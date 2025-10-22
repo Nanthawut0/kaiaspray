@@ -13,7 +13,7 @@
   - localhost
   when:
   - ctx.num > 0
-  - check_nodekey_file.stat.exists == False
+  - not check_nodekey_file.stat.exists
 
 - name: Convert and get validator data
   kaia_validator:

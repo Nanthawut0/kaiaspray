@@ -40,6 +40,6 @@ kaia_conf_default:
   SC_SUB_BRIDGE_PORT: "{{ kaia_sub_bridge_port }}"
 kaia_conf_override:
 
-kaia_bridge_enabled: 0
+kaia_bridge_enabled: false
 kaia_bridge_node_type:
 kaia_bridge_node_num:

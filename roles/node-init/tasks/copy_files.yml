@@ -59,8 +59,8 @@
     src: "{{ homi_output_dir }}/cn/scripts/genesis.json"
     dest: "/etc/{{ kaia_daemon_name }}/genesis.json"
   when:
-  - check_kaia_data_dir.stat.exists == False
-  - is_service_chain == False
+  - not check_kaia_data_dir.stat.exists
+  - not is_service_chain
   - kaia_network is none
 
 - name: "Initialization - Copy Genesis File"
@@ -69,7 +69,7 @@
     src: "{{ homi_output_dir }}/scn/scripts/genesis.json"
     dest: "/etc/{{ kaia_daemon_name }}/genesis.json"
   when:
-  - check_kaia_data_dir.stat.exists == False
+  - not check_kaia_data_dir.stat.exists
   - is_service_chain
   - kaia_network is none
 
@@ -79,5 +79,5 @@
     cmd: "k{{ kaia_node_type }} init --datadir {{ kaia_conf.DATA_DIR }} /etc/{{ kaia_daemon_name }}/genesis.json"
   when:
   - kaia_network is none
-  - check_kaia_data_dir.stat.exists == False
+  - not check_kaia_data_dir.stat.exists
 

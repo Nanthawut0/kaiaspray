@@ -32,7 +32,7 @@
     kaia_build_required: True
   when:
     - kaia_build_check_file_stats.results | selectattr('stat.exists', 'equalto', false) | list | length > 0 or 
-      kaia_build_skip_if_exists == False
+      not kaia_build_skip_if_exists
 
 - name: Build Remote - Get first available host from inventory
   ansible.builtin.set_fact:
@@ -145,9 +145,7 @@
     src: "~/kaia_build-{{ build_identifiers[item[0]] }}/build/bin/{{ item[1] }}"
     dest: "{{ bin_dir }}-{{ build_identifiers[item[0]] }}/"
     flat: yes
-  with_nested:
-    - "{{ range(0, total_builds | int) | list }}"
-    - ['kbn', 'kcn', 'kpn', 'ken', 'kscn', 'kspn', 'ksen']
+  loop: "{{ range(0, total_builds | int) | list | product(['kbn', 'kcn', 'kpn', 'ken', 'kscn', 'kspn', 'ksen']) | list }}"
   delegate_to: "{{ remote_build_host }}"
   when:
     - kaia_build_required
@@ -158,9 +156,7 @@
     src: "~/kaia_build-{{ build_identifiers[item[0]] }}/build/rpm/etc/init.d/{{ item[1] }}"
     dest: "{{ bin_dir }}-{{ build_identifiers[item[0]] }}/"
     flat: yes
-  with_nested:
-    - "{{ range(0, total_builds | int) | list }}"
-    - ['kbnd', 'kcnd', 'kpnd', 'kend', 'kscnd', 'kspnd', 'ksend']
+  loop: "{{ range(0, total_builds | int) | list | product(['kbnd', 'kcnd', 'kpnd', 'kend', 'kscnd', 'kspnd', 'ksend']) | list }}"
   delegate_to: "{{ remote_build_host }}"
   when:
     - kaia_build_required
@@ -170,9 +166,7 @@
   ansible.builtin.file:
     path: "{{ bin_dir }}-{{ build_identifiers[item[0]] }}/{{ item[1] }}"
     mode: '0755'
-  with_nested:
-    - "{{ range(0, total_builds | int) | list }}"
-    - ['kbn', 'kcn', 'kpn', 'ken', 'kscn', 'kspn', 'ksen']
+  loop: "{{ range(0, total_builds | int) | list | product(['kbn', 'kcn', 'kpn', 'ken', 'kscn', 'kspn', 'ksen']) | list }}"
   when:
     - kaia_build_required
     - not kaia_build_check_file_stats.results[item[0]].stat.exists or not kaia_build_skip_if_exists
@@ -181,9 +175,7 @@
   ansible.builtin.file:
     path: "{{ bin_dir }}-{{ build_identifiers[item[0]] }}/{{ item[1] }}"
     mode: '0755'
-  with_nested:
-    - "{{ range(0, total_builds | int) | list }}"
-    - ['kbnd', 'kcnd', 'kpnd', 'kend', 'kscnd', 'kspnd', 'ksend']
+  loop: "{{ range(0, total_builds | int) | list | product(['kbnd', 'kcnd', 'kpnd', 'kend', 'kscnd', 'kspnd', 'ksend']) | list }}"
   when:
     - kaia_build_required
     - not kaia_build_check_file_stats.results[item[0]].stat.exists or not kaia_build_skip_if_exists
@@ -214,6 +206,14 @@
   when:
     - kaia_build_required
     - not kaia_build_check_file_stats.results[0].stat.exists or not kaia_build_skip_if_exists
+
+- name: Build Remote - Remove existing bin directory if it exists
+  ansible.builtin.file:
+    path: "{{ bin_dir }}"
+    state: absent
+  when: 
+    - total_builds | int > 0
+    - kaia_build_required
 
 - name: Build Remote - Create symbolic link to first bin directory
   ansible.builtin.file:
