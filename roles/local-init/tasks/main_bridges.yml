@@ -22,9 +22,9 @@
 
 - name: Bridge - Generate main-bridges.json
   copy:
-    content: "{{ item.value['knis'] }}"
+    content: "{{ item.value.knis | to_json }}"
     dest: "{{ homi_output_dir }}/bridge/main-bridges.json"
-  with_dict: "{{ main_bridges_result['nodes'] }}"
+  loop: "{{ main_bridges_result.nodes | dict2items }}"
   when:
   - kaia_bridge_enabled
   tags:
