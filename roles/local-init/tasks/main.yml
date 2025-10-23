@@ -1,4 +1,17 @@
 ---
+- name: Create required directories
+  file:
+    path: "{{ item }}"
+    state: directory
+    mode: '0755'
+  loop:
+  - "{{ cache_dir }}"
+  - "{{ bin_dir }}"
+  - "{{ homi_output_dir }}"
+  - "{{ kaia_build_dir }}"
+  tags:
+  - localhost
+
 - name: Start to download dependencies
   include_tasks: download_dependency.yml
   tags:
@@ -41,7 +54,7 @@
 
 - name: Generate genesis.json & nodekey & validator
   include_tasks: genesis.yml
-  with_items:
+  loop:
   - { type: "cn", num: "{{ kaia_num_cn }}", network_id: "{{ kaia_network_id }}", chain_id: "{{ kaia_chain_id }}" }
   - { type: "pn", num: "{{ kaia_num_pn }}", network_id: "{{ kaia_network_id }}", chain_id: "{{ kaia_chain_id }}"  }
   - { type: "en", num: "{{ kaia_num_en }}", network_id: "{{ kaia_network_id }}", chain_id: "{{ kaia_chain_id }}"  }
@@ -57,7 +70,7 @@
 
 - name: Generate static-nodes.json
   include_tasks: static_nodes.yml
-  with_items:
+  loop:
   - { is_service_chain: False, num_cn: "{{ kaia_num_cn }}", num_pn: "{{ kaia_num_pn }}", num_en: "{{ kaia_num_en }}" }
   - { is_service_chain: True, num_cn: "{{ kaia_num_scn }}", num_pn: "{{ kaia_num_spn }}", num_en: "{{ kaia_num_sen }}" }
   loop_control:

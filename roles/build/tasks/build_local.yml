@@ -44,10 +44,10 @@
     # - force compile is true
     kaia_build_required: >-
       {{ (kaia_build_required | default([])) + [ (
-          kaia_build_check_file_stats.results[item].stat.exists == False
-          or kaia_build_skip_if_exists == False
+          not kaia_build_check_file_stats.results[item].stat.exists
+          or not kaia_build_skip_if_exists
           or git_info.results[item].before != git_info.results[item].after
-          or kaia_build_force_compile == True
+          or kaia_build_force_compile
       ) ] }}
   loop: "{{ range(0, total_builds | int) | list }}"
 
@@ -74,9 +74,7 @@
     src: "{{ kaia_build_dir }}-{{ build_identifiers[item[0]] }}/output/klaytn-docker-pkg/bin/{{ item[1] }}"
     mode: preserve
   when: kaia_build_required[item[0]]
-  with_nested:
-    - "{{ range(0, total_builds | int) | list }}"
-    - ['kbn', 'kcn', 'kpn', 'ken', 'kscn', 'kspn', 'ksen']
+  loop: "{{ range(0, total_builds | int) | list | product(['kbn', 'kcn', 'kpn', 'ken', 'kscn', 'kspn', 'ksen']) | list }}"
 
 # There may be multiple git dirs to build different versions of kaia binaries,
 # however we don't need to use different versions of homi to generate genesis and node keys.
@@ -94,6 +92,12 @@
     src: "{{ kaia_build_dir }}-{{ build_identifiers[0] }}/build/bin/homi"
     mode: preserve
 
+- name: Build - Remove existing bin directory if it exists
+  ansible.builtin.file:
+    path: "{{ bin_dir }}"
+    state: absent
+  when: total_builds | int > 0
+
 - name: Build - Create symbolic link to first bin directory
   ansible.builtin.file:
     src: "{{ bin_dir }}-{{ build_identifiers[0] }}"
@@ -107,9 +111,7 @@
     src: "{{ kaia_build_dir }}-{{ build_identifiers[item[0]] }}/build/rpm/etc/init.d/{{ item[1] }}"
     mode: preserve
   when: kaia_build_required[item[0]]
-  with_nested:
-    - "{{ range(0, total_builds | int) | list }}"
-    - ['kbnd', 'kcnd', 'kpnd', 'kend', 'kscnd', 'kspnd', 'ksend']
+  loop: "{{ range(0, total_builds | int) | list | product(['kbnd', 'kcnd', 'kpnd', 'kend', 'kscnd', 'kspnd', 'ksend']) | list }}"
 
 - name: Build - Creating an empty file for checking
   ansible.builtin.file:

@@ -11,7 +11,7 @@
   register: download_result
   when:
   - ansible_system == "Linux"
-  - check_package_file.stat.exists == False
+  - not check_package_file.stat.exists
 
 - name: "{{ package_name }}: Unarchive Package"
   unarchive:
@@ -21,7 +21,7 @@
     keep_newer: yes
   register: extract_result
   when:
-  - check_package_file.stat.exists == False
+  - not check_package_file.stat.exists
 
 - name: "{{ package_name }}: Copy binary"
   copy:
@@ -29,7 +29,7 @@
     dest: "{{ bin_dir }}/{{ package_name }}"
     mode: '0755'
   when:
-  - check_package_file.stat.exists == False
+  - not check_package_file.stat.exists
 
 - name: "{{ package_name }}: Clean-up"
   file:
@@ -39,4 +39,4 @@
   - "{{ cache_dir }}/{{ extract_result.files[0] }}"
   - "{{ download_result.dest }}"
   when:
-  - check_package_file.stat.exists == False
+  - not check_package_file.stat.exists

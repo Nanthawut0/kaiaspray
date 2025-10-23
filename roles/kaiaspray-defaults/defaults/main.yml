@@ -28,7 +28,7 @@ kaia_service_chain_id:
 
 kaia_custom_topology:
 
-kaia_bridge_enabled: 0
+kaia_bridge_enabled: false
 
 kaia_port: 32323
 kaia_main_bridge_port: 50505

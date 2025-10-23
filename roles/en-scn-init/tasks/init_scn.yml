@@ -53,7 +53,7 @@
     - name: Replace default IP with node IP
       become: yes
       command: "sed -i '0,/0.0.0.0/{s//{{ hostvars[item].ansible_host }}/}' {{ kaia_conf.DATA_DIR }}/static-nodes.json"
-      with_items: "{{ groups.scn }}"
+      loop: "{{ groups.scn }}"
       loop_control:
         index_var: index
   when: 
@@ -115,7 +115,7 @@
     public_ip: "{{ hostvars[item].ansible_host }}"
     private_ip: "{{ hostvars[item].ansible_private_host }}"
   register: validator_result
-  with_items: "{{ groups.scn }}"
+  loop: "{{ groups.scn }}"
   loop_control:
     index_var: index
   when: 
@@ -126,7 +126,7 @@
   copy:
     dest: "{{ kaia_conf.DATA_DIR }}/validator{{ index+1 }}"
     content: "{{ item.validator }}"
-  with_items: "{{ validator_result.results }}"
+  loop: "{{ validator_result.results }}"
   loop_control:
     index_var: index
   when: 
@@ -154,13 +154,13 @@
       ansible.builtin.slurp:
         src: "{{ '/'.join((homi_results_dir, 'keys', 'nodekey' + item)) }}"
       register: nodekey_slurpfile
-      with_sequence: start=1 end={{ groups.scn|length }}
+      loop: "{{ range(1, groups.scn|length + 1) | list }}"
 
     - name: Read validator file
       ansible.builtin.slurp:
         src: "{{ '/'.join((kaia_conf.DATA_DIR, 'validator' + item)) }}"
       register: validator_slurpfile
-      with_sequence: start=1 end={{ groups.scn|length }}
+      loop: "{{ range(1, groups.scn|length + 1) | list }}"
 
     - set_fact:
         genesis: "{{ genesis_slurpfile['content'] | b64decode }}"

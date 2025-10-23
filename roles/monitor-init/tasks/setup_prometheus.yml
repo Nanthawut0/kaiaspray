@@ -16,37 +16,42 @@
   tags:
   - prometheus
 
+- name: "Generate nodes list for Prometheus"
+  set_fact:
+    prometheus_nodes: >-
+      {%- set nodes_list = [] -%}
+      {%- for host in groups['nodes'] -%}
+        {%- set group_names = hostvars[host]['group_names'] -%}
+        {%- if 'cn' in group_names -%}
+          {%- set type = 'cn' -%}
+        {%- elif 'pn' in group_names -%}
+          {%- set type = 'pn' -%}
+        {%- elif 'en' in group_names -%}
+          {%- set type = 'en' -%}
+        {%- elif 'scn' in group_names -%}
+          {%- set type = 'scn' -%}
+        {%- elif 'spn' in group_names -%}
+          {%- set type = 'spn' -%}
+        {%- elif 'sen' in group_names -%}
+          {%- set type = 'sen' -%}
+        {%- endif -%}
+        {%- set node_dict = {
+          'name': host,
+          'private_ip': hostvars[host]['ansible_private_host'],
+          'type': type
+        } -%}
+        {%- set _ = nodes_list.append(node_dict) -%}
+      {%- endfor -%}
+      {{ nodes_list }}
+  tags:
+  - prometheus
+
 - name: "Template Prometheus file_sd configuration"
   become: yes
   template:
     src: "templates/prometheus/kaia-nodes.yml.j2"
     dest: "{{ prometheus_conf_dir }}/kaia-nodes.yml"
     force: yes
-  vars:
-    nodes: |-
-      [
-      {% for host in groups['nodes'] -%}
-        {% set group_names = hostvars[host]['group_names'] %}
-        {% if 'cn' in group_names %}
-          {% set type = 'cn' %}
-        {% elif 'pn' in group_names %}
-          {% set type = 'pn' %}
-        {% elif 'en' in group_names %}
-          {% set type = 'en' %}
-        {% elif 'scn' in group_names %}
-          {% set type = 'scn' %}
-        {% elif 'spn' in group_names %}
-          {% set type = 'spn' %}
-        {% elif 'sen' in group_names %}
-          {% set type = 'sen' %}
-        {% endif %}
-        {
-          "name": "{{ host }}",
-          "private_ip": "{{ hostvars[host]['ansible_private_host'] }}" ,
-          "type": "{{ type }}"
-        },
-      {% endfor %}
-      ]
   tags:
   - prometheus
 

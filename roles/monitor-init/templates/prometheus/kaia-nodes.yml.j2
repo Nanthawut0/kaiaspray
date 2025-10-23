@@ -1,4 +1,4 @@
-{% for node in nodes %}
+{% for node in prometheus_nodes %}
 - targets:
   - "{{ node['private_ip'] }}:{{ kaia_exporter_port }}"
   labels:
