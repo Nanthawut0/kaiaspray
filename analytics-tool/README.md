@@ -90,7 +90,7 @@ zip -r output.zip output
 You can upload the compressed zip file to s3.
 ```bash
 # NOTE: aws-cli should be installed
-ZIP_FILE=analytics-tool/output.zip
+ZIP_FILE=output.zip
 S3_BUCKET=
 aws s3 cp "$ZIP_FILE" "s3://$S3_BUCKET/$ZIP_FILE"
 ```

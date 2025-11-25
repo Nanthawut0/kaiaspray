@@ -34,7 +34,7 @@ usage() {
     echo "commands:"
     echo "  api     - Collect API information (latest, or filtered by NUMBER/BLOCKHASH/TXHASH)"
     echo "  common  - Collect common analysis data (logs, monitor metrics, system metrics)"
-    echo "  decode  - Decode data using NUMBER or ACCOUNT"
+    echo "  decode  - Decode data using NUMBER or KEYSTORE_FILE&PASSWORD"
     echo "  help    - Show this help message"
     exit 1
 }
