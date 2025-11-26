@@ -2,112 +2,95 @@
 
 A command-line tool for collecting and analyzing node operation data.
 
-## Features
+There's three commands.
+* `./analysis.sh api`
+* `./analysis.sh common`
+* `./analysis.sh decode`
 
-- Common Analysis
-  - Collect logs from the last N days
-  - Exported grafana metrics (e.g. number of rpc calls)
-  - System metrics
-    - Top Result (cpu and memory usage)
-    - Disk Usage (df -h)
-    - Process Information (ps -ef | grep k{node})
-    - System logs (e.g. dmesg - killed system logs)
+## Prepare the script
 
-- Network connection
-  - admin.peers, admin.nodeInfo RPC call
-  - peer count per type
-
-- Consensus data
-  - kaia.getBlockWithConsensusInfo
-  - istanbul.getValidators
-  - istanbul.getDemotedValidators
-  - kaia.getCouncil
-  - kaia.getCommittee
-  - governance.getStakingInfo
-  - kaia.getRewards
-
-- Governance data
-  - decoded voteData if data not empty
-  - decoded governanceData if data not empty
-  - decoded extraData
-
-- Compress to zip file
-
-## Getting Started
-
-### Prerequisites
-
-The following tools are required:
-```bash
-# macOS
-brew install curl jq
-
-# Ubuntu/Debian
-sudo apt-get update
-sudo apt-get install curl jq zip nc
-
-# yum
-sudo yum install curl jq zip nc
-```
-
-### Installation
-
-1. Download the script:
+Download the script inside your node:
 ```bash
 curl -O https://raw.githubusercontent.com/kaiachain/kaiaspray/main/analytics-tool/analyze.sh
 ```
 
-2. Make it executable:
+Make it executable:
 ```bash
 chmod +x analyze.sh
 ```
 
-### Basic Usage
-Set next paths to yours
+## Replace the env variable with your own values
+The env variables are located at the top of analyze.sh.
+
+For all the cases, replace next env vars with your own values.
 ```bash
-LOG_PATH="/var/kcnd/data/logs/kcnd.out"
-BIN_PATH="/usr/bin/kcn"
-IPC_URL="/var/kcnd/data/klay.ipc"
-RPC_URL="http://localhost:8551"
+# At analyze.sh ln 4~7
+OUTPUT_DIR="./output"
+BINARY="ken"
+URLPATH="/var/kend/data/klay.ipc"  # Default to IPC socket
 ```
 
-1. Run complete analysis:
+For `api` command, you have five options.
+1. [default], it returns `latest` information.
+2. If you specify `NUMBER`, it only returns the API results which accepts NUMBER.
+3. If you specify `BLOCKHASH`, it only returns the API results which accepts BLOCKHASH.
+4. If you specify `TXHASH`, it only returns the API results which accepts TXHASH. 
+5. If you specify `ACCOUNT`, it only returns the API results which accepts ACCOUNT.
 ```bash
-# NOTE: monitor should be enabled
-
-./analyze.sh --tail-lines 10000 --log-path $LOG_PATH --monitor-port 61001
+# At analyze.sh line 9~11
+#NUMBER="" # Uncomment it when you want to specify it and replace with your own value.
+#BLOCKHASH="" # Uncomment it when you want to specify it and replace with your own value.
+#TXHASH="" # Uncomment it when you want to specify it and replace with your own value.
+#ACCOUNT="" # Uncomment it when you want to specify it and replace with your own value.
 ```
 
-2. Collect only gov-data (collect via rpc):
+For `decode` command, you must specify either `NUMBER` or `KEYSTORE_FILE`&`PASSWORD`
 ```bash
-./analyze.sh --gov-data-only --bin-path $BIN_PATH --rpc-endpoint $RPC_URL --block-height 5
+# At analyze.sh line 14~15
+#NUMBER="170572052" # Uncomment it when you want to specify it and replace with your own value.
+#KEYSTORE_FILE="local-deploy/homi-output/keys/keystore1" # Uncomment it when you want to specify it and replace with your own value.
+#PASSWORD=$(cat local-deploy/homi-output/keys/passwd1)
 ```
 
-3. Collect only consensus-data (collect via ipc):
-
+For `common` command, default setting is next. Replace with your own values.
 ```bash
-# NOTE: If you're querying on a full node, only (multiples of 1024 + 1 or recent) block nums are available.
-
- ./analyze.sh --consensus-only --rpc-endpoint $IPC_URL --bin-path $BIN_PATH --block-height 1025
+# At analyze.sh ln 10~13
+LINES=10000
+LOG_PATH="/var/kend/logs/kend.out"
+MONITOR_PORT=61006
+METRICS_INTERVAL=5  # seconds
 ```
 
-4. Collect only network-data (collect via ipc):
+## Install dependencies
+For `decode` command, `jq` needs to be installed.
+
+## Run the script
+
 ```bash
-./analyze.sh --network-only --rpc-endpoint $IPC_URL --bin-path $BIN_PATH
+./analyze.sh api
+./analyze.sh common
+./analyze.sh decode
+```
+
+It may need sudo.
+```bash
+sudo ./analyze.sh api
+sudo ./analyze.sh common
+sudo ./analyze.sh decode
 ```
 
 ## Export the output
 The result is stored in output folder.
 You can compress the output directory to zip file.
 ```bash
-./analyze.sh --compress-output
+# NOTE: zip should be installed
+zip -r output.zip output
 ```
 
 You can upload the compressed zip file to s3.
-NOTE: 
 ```bash
 # NOTE: aws-cli should be installed
-ZIP_FILE=
+ZIP_FILE=output.zip
 S3_BUCKET=
 aws s3 cp "$ZIP_FILE" "s3://$S3_BUCKET/$ZIP_FILE"
 ```
